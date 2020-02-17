@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>用户观看页面</title>
+</head>
+<body>
+<h2 style="text-align: center;">这是用户观看页面</h2>
+
+<img id="receiver" style="width: 500px;height: 450px;">
+<script type="text/javascript" charset="utf-8">
+  //创建一个socket实例 ?user用来代表用户
+  var socket = new WebSocket("ws://localhost:8080/v?user");
+  //打开socket
+  socket.onopen = function () {
+    console.log("open success")
+  }
+  var image = document.getElementById('receiver');
+  //接收到消息的回调方法
+  socket.onmessage = function (data) {
+    image.src = data.data;
+  }
+  //连接关闭的回调方法
+  socket.onclose = function () {
+    console.log("close");
+  }
+</script>
+</body>
+</html>

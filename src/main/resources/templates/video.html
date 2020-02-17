@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>video</title>
+</head>
+<body>
+<h2 style="text-align: center;">这是主播页面</h2>
+<input type="button" title="开启摄像头" value="开启摄像头" onclick="getMedia()"/>
+<video id="video" width="500px" height="500px" autoplay="autoplay"></video>
+<canvas id="canvas" width="500px" height="500px"></canvas>
+<button onclick="start()">开始直播</button>
+<button onclick="stop()">停止直播</button>
+<script>
+  //获得video摄像头区域
+  var video = document.getElementById("video");
+  var canvas = document.getElementById("canvas");
+  var ctx = canvas.getContext('2d');
+
+  function getMedia() {
+    var constraints = {
+      video: {width: 500, height: 500},
+      audio: false
+    };
+    /*
+    这里介绍新的方法:H5新媒体接口 navigator.mediaDevices.getUserMedia()
+    这个方法会提示用户是否允许媒体输入,(媒体输入主要包括相机,视频采集设备,屏幕共享服务,麦克风,A/D转换器等)
+    返回的是一个Promise对象。
+    如果用户同意使用权限,则会将 MediaStream对象作为resolve()的参数传给then()
+    如果用户拒绝使用权限,或者请求的媒体资源不可用,则会将 PermissionDeniedError作为reject()的参数传给catch()
+    */
+    var promise = navigator.mediaDevices.getUserMedia(constraints);
+    promise.then(function (MediaStream) {
+      video.srcObject = MediaStream;
+      video.play();
+    }).catch(function (PermissionDeniedError) {
+      console.log(PermissionDeniedError);
+    })
+  }
+
+  var socket = new WebSocket("ws://localhost:8080/v?video");
+  //打开socket
+
+  socket.onopen = function () {
+    console.log("open success")
+  }
+
+  //接收到消息的回调方法
+  socket.onmessage = function (event) {
+    console.log(event)
+  }
+
+  //连接关闭的回调方法
+  socket.onclose = function () {
+    console.log("close");
+  }
+
+  var interval
+
+  function start() {
+    interval = window.setInterval(function () {
+      ctx.drawImage(video, 0, 0, 500, 500);
+      socket.send(canvas.toDataURL("image/jpeg", 0.5));
+    }, 60);
+  }
+
+  function stop() {
+    clearInterval(interval)
+  }
+</script>
+</body>
+</html>
